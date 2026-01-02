@@ -1,0 +1,673 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  TrendingUp, TrendingDown, Users, Package, Globe, ArrowRight, ArrowLeft,
+  Store, PlayCircle, Award, Gamepad2, Youtube, HelpCircle, CheckCircle,
+  BarChart2, Heart, MousePointerClick, ClipboardList, Target, BookOpen, School,
+  RefreshCcw
+} from 'lucide-react';
+
+// --- DATA & CONSTANTS ---
+
+const TOTAL_SLIDES = 9;
+
+const QUIZ_DATA = [
+  {
+    id: 1,
+    question: { id: "Jika harga sebuah barang NAIK, apa yang biasanya terjadi pada Permintaan (Demand)?", en: "If the price of an item goes UP, what usually happens to Demand?" },
+    options: [
+      { id: "Permintaan Naik", en: "Demand goes Up", correct: false },
+      { id: "Permintaan Tetap", en: "Demand stays same", correct: false },
+      { id: "Permintaan Turun", en: "Demand goes Down", correct: true },
+    ]
+  },
+  {
+    id: 2,
+    question: { id: "Manakah contoh Pasar Abstrak?", en: "Which is an example of an Abstract Market?" },
+    options: [
+      { id: "Pasar Tradisional", en: "Traditional Market", correct: false },
+      { id: "Tokopedia / Shopee", en: "Online Marketplace", correct: true },
+      { id: "Supermarket", en: "Supermarket", correct: false },
+    ]
+  },
+  {
+    id: 3,
+    question: { id: "Titik temu antara kurva permintaan dan penawaran disebut...", en: "The meeting point between demand and supply curves is called..." },
+    options: [
+      { id: "Harga Diskon", en: "Discount Price", correct: false },
+      { id: "Harga Eceran", en: "Retail Price", correct: false },
+      { id: "Harga Keseimbangan", en: "Equilibrium Price", correct: true },
+    ]
+  }
+];
+
+// --- SUB-COMPONENTS ---
+
+const Header = ({ lang, setLang }) => (
+  <header className="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
+    <div className="max-w-6xl mx-auto flex justify-between items-center">
+      <div className="flex items-center gap-3">
+        <div className="bg-yellow-500 text-slate-900 font-bold px-2 py-1 rounded text-xs tracking-wider">
+          CAMBRIDGE
+        </div>
+        <h1 className="font-bold text-sm md:text-base tracking-tight">Economics Phase D</h1>
+      </div>
+      <button 
+        onClick={() => setLang(lang === 'id' ? 'en' : 'id')}
+        className="flex items-center gap-2 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-1.5 rounded-full transition-all duration-300"
+      >
+        <Globe size={14} />
+        {lang === 'id' ? 'EN' : 'ID'}
+      </button>
+    </div>
+  </header>
+);
+
+const ControlBar = ({ currentSlide, totalSlides, nextSlide, prevSlide, lang }) => (
+  <div className="bg-white p-4 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center px-6 md:px-12 gap-4">
+    <button 
+      onClick={prevSlide} 
+      disabled={currentSlide === 0}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all ${
+        currentSlide === 0 
+          ? 'text-slate-300 cursor-not-allowed' 
+          : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+      }`}
+    >
+      <ArrowLeft size={18} /> {lang === 'id' ? 'Kembali' : 'Back'}
+    </button>
+    
+    <div className="flex gap-2">
+      {[...Array(totalSlides)].map((_, idx) => (
+        <div 
+          key={idx} 
+          className={`h-2 rounded-full transition-all duration-500 ${
+            idx === currentSlide ? 'bg-blue-600 w-8 md:w-12 shadow-blue-200 shadow-lg' : 'bg-slate-200 w-2 md:w-3'
+          }`} 
+        />
+      ))}
+    </div>
+
+    <button 
+      onClick={nextSlide}
+      disabled={currentSlide === totalSlides - 1}
+      className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold transition-all shadow-lg ${
+        currentSlide === totalSlides - 1 
+          ? 'text-slate-300 bg-slate-100 cursor-not-allowed shadow-none' 
+          : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95 shadow-blue-300'
+      }`}
+    >
+      {lang === 'id' ? 'Lanjut' : 'Next'} <ArrowRight size={18} />
+    </button>
+  </div>
+);
+
+const SlideContainer = ({ children }) => (
+  <div className="flex-1 p-6 md:p-8 flex flex-col justify-center items-center w-full animate-fadeIn">
+    {children}
+  </div>
+);
+
+// --- SPECIFIC SLIDE COMPONENTS ---
+
+const HeroSlide = ({ lang, nextSlide }) => (
+  <div className="text-center space-y-8 max-w-3xl">
+    <div className="inline-flex p-6 rounded-full bg-blue-50 mb-4 animate-bounce shadow-lg shadow-blue-100">
+       <Store size={80} className="text-blue-600" />
+    </div>
+    <h1 className="text-4xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-tight">
+      {lang === 'id' ? "Dinamika Harga & Pasar" : "Price & Market Dynamics"}
+    </h1>
+    <p className="text-slate-500 text-lg md:text-xl">
+      {lang === 'id' ? "Memahami interaksi penjual dan pembeli dalam ekonomi modern." : "Understanding seller and buyer interactions in modern economy."}
+    </p>
+    <div className="pt-8">
+      <button onClick={nextSlide} className="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-3 mx-auto">
+        {lang === 'id' ? "Masuk Kelas" : "Enter Class"} <ArrowRight />
+      </button>
+    </div>
+  </div>
+);
+
+const ObjectivesSlide = ({ lang }) => (
+  <div className="w-full h-full flex flex-col">
+    <div className="text-center mb-8">
+      <h2 className="text-2xl md:text-3xl font-bold text-slate-800">{lang === 'id' ? "Aturan & Tujuan Kelas" : "Class Rules & Objectives"}</h2>
+    </div>
+    <div className="grid md:grid-cols-2 gap-6 h-full">
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden group hover:scale-[1.01] transition-transform">
+           <School className="absolute right-[-20px] top-[-20px] opacity-10 rotate-12" size={150}/>
+           <h3 className="text-yellow-400 font-bold text-xs uppercase tracking-widest mb-3">School Vision</h3>
+           <p className="font-serif italic text-xl leading-relaxed">
+             "Menjadi Pembelajar Sejati yang Berkarakter Unggul dan Berdaya Saing Global"
+           </p>
+        </div>
+        <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm h-full">
+          <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+            <ClipboardList size={18} className="text-blue-600"/> Class Agreements
+          </h3>
+          <ul className="space-y-3 text-sm text-slate-600 font-medium">
+             {["Arrive on time", "Keep classroom clean", "Be honest & responsible", "Complete assignments", "Respect everyone"].map((rule, i) => (
+                <li key={i} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                  <CheckCircle size={16} className="text-green-500 flex-shrink-0"/> {rule}
+                </li>
+             ))}
+          </ul>
+        </div>
+      </div>
+      <div className="space-y-4 flex flex-col">
+        <div className="bg-white border-2 border-blue-50 p-6 rounded-3xl flex-1 shadow-sm">
+          <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+            <Target size={18} className="text-blue-600"/> Learning Objectives
+          </h3>
+          <p className="text-slate-700 text-sm mb-6 leading-relaxed bg-blue-50 p-4 rounded-xl border border-blue-100">
+            Murid mampu <strong>menganalisis peran harga dan pasar</strong> dalam menentukan interaksi penjual–pembeli dalam bentuk <strong>simulasi pasar</strong>.
+          </p>
+          <div className="space-y-3">
+            {[
+              { icon: BookOpen, color: "orange", title: "Knowledge", text: "Definisi Demand, Supply, Equilibrium" },
+              { icon: BarChart2, color: "purple", title: "Analysis", text: "Pengaruh Scarcity terhadap Harga" },
+              { icon: Heart, color: "teal", title: "Evaluation", text: "Etika Ekonomi & Keadilan Pasar" }
+            ].map((item, i) => (
+              <div key={i} className="flex gap-4 items-center p-3 hover:bg-slate-50 rounded-xl transition cursor-default">
+                <div className={`bg-${item.color}-100 text-${item.color}-600 p-2 rounded-lg`}>
+                  <item.icon size={16}/>
+                </div>
+                <div>
+                  <span className={`text-xs font-bold text-${item.color}-700 block uppercase`}>{item.title}</span>
+                  <span className="text-xs text-slate-500">{item.text}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <a 
+          href="https://docs.google.com/spreadsheets/d/1cBw_BgzEvvEwH7eZevpSmSYnV1i9uPugtT5zSvL-BzI/edit?usp=drive_link" 
+          target="_blank" rel="noreferrer"
+          className="bg-green-600 text-white p-4 rounded-2xl font-bold shadow-green-200 shadow-lg hover:bg-green-700 hover:shadow-xl transition-all flex items-center justify-center gap-2 group"
+        >
+          <ClipboardList size={20} className="group-hover:scale-110 transition"/>
+          {lang === 'id' ? "Isi Daftar Hadir" : "Fill Attendance"}
+        </a>
+      </div>
+    </div>
+  </div>
+);
+
+const PreActivitySlide = ({ lang }) => (
+  <div className="w-full">
+    <div className="text-center mb-10">
+      <h2 className="text-3xl font-bold text-slate-800 mb-2">{lang === 'id' ? "Aktivitas Awal" : "Pre-Activity"}</h2>
+      <p className="text-slate-500">{lang === 'id' ? "Pemanasan sebelum materi inti" : "Warm up before core material"}</p>
+    </div>
+    <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-xl hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden group">
+        <div className="absolute -right-10 -top-10 bg-white/10 rounded-full w-64 h-64 blur-3xl group-hover:bg-white/20 transition-all"/>
+        <Gamepad2 size={120} className="absolute right-[-20px] bottom-[-20px] opacity-20 rotate-[-15deg]" />
+        
+        <h3 className="font-bold text-2xl mb-2 flex items-center gap-3 relative z-10">
+          <Gamepad2 /> {lang === 'id' ? "Game Edukasi" : "Educational Game"}
+        </h3>
+        <p className="text-indigo-100 mb-8 relative z-10 text-sm leading-relaxed opacity-90">
+          {lang === 'id' ? "Cek pengetahuan awalmu tentang ekonomi lewat permainan seru ini!" : "Check your prior knowledge through this fun game!"}
+        </p>
+        <a 
+          href="https://jelajahangka.my.canva.site/game-edukasi-ekonomi" 
+          target="_blank" rel="noreferrer"
+          className="inline-block bg-white text-indigo-700 px-8 py-3 rounded-full font-bold hover:bg-indigo-50 hover:shadow-lg transition-all relative z-10"
+        >
+          {lang === 'id' ? "Mainkan Sekarang" : "Play Now"}
+        </a>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl hover:-translate-y-2 transition-transform duration-300 group">
+        <h3 className="font-bold text-2xl mb-2 flex items-center gap-3 text-red-600">
+          <Youtube /> Video Apersepsi
+        </h3>
+        <p className="text-slate-500 mb-8 text-sm leading-relaxed">
+          {lang === 'id' ? "Tonton video singkat untuk melihat aktivitas pasar di kehidupan nyata." : "Watch this short video to see real-life market activities."}
+        </p>
+        <a 
+          href="https://youtu.be/XzDAJKAu80o?si=BAm65E_pNY7iZCBV" 
+          target="_blank" rel="noreferrer"
+          className="block w-full text-center bg-red-600 text-white px-8 py-3 rounded-full font-bold hover:bg-red-700 hover:shadow-red-200 hover:shadow-lg transition-all flex items-center justify-center gap-2"
+        >
+          <PlayCircle size={20}/> {lang === 'id' ? "Tonton Video" : "Watch Video"}
+        </a>
+      </div>
+    </div>
+  </div>
+);
+
+const SimulationSlide = ({ lang }) => {
+  const [price, setPrice] = useState(5);
+  // Simple logic: higher price = lower demand, higher supply
+  const demandCount = Math.max(0, 11 - price);
+  const supplyCount = Math.max(0, price);
+
+  return (
+    <div className="w-full max-w-4xl">
+      <div className="text-center mb-8">
+        <span className="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Interactive Simulation</span>
+        <h2 className="text-3xl font-bold text-slate-800">{lang === 'id' ? "Simulasi Pasar" : "Market Simulation"}</h2>
+        <p className="text-slate-500 text-sm mt-2">{lang === 'id' ? "Geser harga untuk melihat reaksi pasar" : "Slide price to see market reaction"}</p>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 mb-8">
+        <div className="flex justify-between mb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+           <span>Murah (Cheap)</span>
+           <span>Mahal (Expensive)</span>
+        </div>
+        <input 
+          type="range" min="1" max="10" value={price} 
+          onChange={(e) => setPrice(parseInt(e.target.value))}
+          className="w-full h-6 bg-gradient-to-r from-green-400 via-yellow-400 to-red-500 rounded-full appearance-none cursor-pointer hover:opacity-90 transition-opacity"
+        />
+        <div className="text-center mt-4">
+           <span className="text-2xl font-black text-slate-700 bg-slate-100 px-6 py-2 rounded-xl">Price: ${price}0</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-8">
+        <div className="bg-red-50 p-6 rounded-3xl border border-red-100 text-center transition-all duration-500 hover:shadow-md">
+          <div className="flex justify-center items-center gap-2 mb-2 text-red-800 font-bold opacity-70">
+            <Users size={20}/> DEMAND
+          </div>
+          <div className="text-6xl font-black text-red-600 mb-4 transition-all duration-300 scale-100">{demandCount}0</div>
+          <div className="flex flex-wrap justify-center gap-1.5 min-h-[80px] content-start">
+             {[...Array(demandCount)].map((_, i) => (
+                <Users key={i} size={24} className="text-red-400 animate-fadeIn"/>
+             ))}
+             {demandCount === 0 && <span className="text-xs text-red-300 italic py-4">Too expensive, no buyers!</span>}
+          </div>
+        </div>
+        
+        <div className="bg-green-50 p-6 rounded-3xl border border-green-100 text-center transition-all duration-500 hover:shadow-md">
+          <div className="flex justify-center items-center gap-2 mb-2 text-green-800 font-bold opacity-70">
+            <Package size={20}/> SUPPLY
+          </div>
+          <div className="text-6xl font-black text-green-600 mb-4 transition-all duration-300 scale-100">{supplyCount}0</div>
+          <div className="flex flex-wrap justify-center gap-1.5 min-h-[80px] content-start">
+             {[...Array(supplyCount)].map((_, i) => (
+                <Package key={i} size={24} className="text-green-500 animate-fadeIn"/>
+             ))}
+              {supplyCount === 0 && <span className="text-xs text-green-300 italic py-4">Too cheap, no sellers!</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const GraphSlide = ({ lang }) => {
+  const [price, setPrice] = useState(5);
+  // Scaling factors for visual graph
+  const pY = 260 - (price * 22);
+  
+  return (
+    <div className="w-full flex flex-col items-center max-w-4xl">
+      <h2 className="text-3xl font-bold text-slate-800 mb-6">{lang === 'id' ? "Kurva Penawaran & Permintaan" : "Supply & Demand Curve"}</h2>
+      
+      <div className="flex flex-col md:flex-row gap-8 w-full items-center">
+        {/* Graph Area */}
+        <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 w-full md:w-2/3 aspect-square md:aspect-video relative overflow-hidden">
+           <svg viewBox="0 0 300 300" className="w-full h-full">
+              {/* Grid Lines (Optional) */}
+              <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+
+              {/* Axes */}
+              <line x1="40" y1="260" x2="280" y2="260" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrow)" />
+              <line x1="40" y1="260" x2="40" y2="20" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrow)" />
+              <text x="280" y="285" className="text-xs fill-slate-500 font-bold">Quantity (Q)</text>
+              <text x="10" y="20" className="text-xs fill-slate-500 font-bold">Price (P)</text>
+              
+              {/* Equilibrium Point Marker (Fixed at P=5 approx) */}
+              <circle cx="160" cy="150" r="4" fill="#3b82f6" />
+              <text x="165" y="145" className="text-[10px] fill-blue-500 font-bold">Equilibrium</text>
+
+              {/* Curves */}
+              <path d="M 50 50 L 270 250" stroke="#ef4444" strokeWidth="4" fill="none" className="opacity-80"/>
+              <text x="50" y="40" className="text-xs fill-red-500 font-bold">Demand</text>
+              
+              <path d="M 50 250 L 270 50" stroke="#22c55e" strokeWidth="4" fill="none" className="opacity-80"/>
+              <text x="250" y="40" className="text-xs fill-green-500 font-bold">Supply</text>
+              
+              {/* Interactive Price Line */}
+              <line x1="40" y1={pY} x2="280" y2={pY} stroke="#f59e0b" strokeWidth="2" strokeDasharray="6,4" />
+              <text x="240" y={pY - 5} className="text-xs fill-orange-500 font-bold bg-white">Price: {price}</text>
+              
+              {/* Intersection Points logic for visual aid */}
+              {/* Demand Intersection (approx based on line equation y = x) */}
+              <circle cx={pY + 20} cy={pY} r="4" fill="#ef4444" className="transition-all duration-300" />
+              {/* Supply Intersection (approx based on line equation y = -x) */}
+              <circle cx={300 - pY - 20} cy={pY} r="4" fill="#22c55e" className="transition-all duration-300" />
+
+           </svg>
+        </div>
+
+        {/* Controls Area */}
+        <div className="w-full md:w-1/3 space-y-6">
+           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+             <label className="block text-sm font-bold text-slate-700 mb-2">Adjust Price Level</label>
+             <input 
+               type="range" min="1" max="10" value={price} 
+               onChange={(e) => setPrice(parseInt(e.target.value))}
+               className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+             />
+             <div className="flex justify-between text-xs text-slate-400 mt-2 font-medium">
+               <span>Low Price</span>
+               <span>High Price</span>
+             </div>
+           </div>
+
+           <div className="space-y-3">
+             <div className={`p-4 rounded-xl border transition-all ${price > 6 ? 'bg-red-50 border-red-200 opacity-100' : 'opacity-40 grayscale bg-slate-50'}`}>
+                <div className="flex items-center gap-2 font-bold text-red-700 text-sm">
+                  <TrendingDown size={16}/> Surplus (Kelebihan Penawaran)
+                </div>
+                <p className="text-xs text-red-600 mt-1">Price high → Low Demand, High Supply.</p>
+             </div>
+             
+             <div className={`p-4 rounded-xl border transition-all ${price < 5 ? 'bg-orange-50 border-orange-200 opacity-100' : 'opacity-40 grayscale bg-slate-50'}`}>
+                <div className="flex items-center gap-2 font-bold text-orange-700 text-sm">
+                  <TrendingUp size={16}/> Shortage (Kelangkaan)
+                </div>
+                <p className="text-xs text-orange-600 mt-1">Price low → High Demand, Low Supply.</p>
+             </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const QuizSlide = ({ lang }) => {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null); // Track selection for feedback
+
+  const handleAnswer = (isCorrect, index) => {
+    setSelectedOption({ index, isCorrect });
+    
+    if (isCorrect) setScore(s => s + 1);
+    
+    // Delay before next question to show feedback
+    setTimeout(() => {
+      setSelectedOption(null);
+      if (currentQ < QUIZ_DATA.length - 1) {
+        setCurrentQ(c => c + 1);
+      } else {
+        setFinished(true);
+      }
+    }, 1000);
+  };
+
+  const reset = () => {
+    setScore(0);
+    setCurrentQ(0);
+    setFinished(false);
+    setSelectedOption(null);
+  };
+
+  if (finished) {
+    return (
+      <div className="text-center py-10 animate-scaleIn">
+        <div className="inline-flex p-8 rounded-full bg-yellow-400 text-white shadow-xl mb-6 animate-bounce">
+          <Award size={80} />
+        </div>
+        <h2 className="text-4xl font-black text-slate-800 mb-2">{lang === 'id' ? "Luar Biasa!" : "Outstanding!"}</h2>
+        <p className="text-slate-500 mb-8 text-xl">
+          Your Score: <span className="font-black text-blue-600 text-3xl">{score}</span> / {QUIZ_DATA.length}
+        </p>
+        <button onClick={reset} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2 mx-auto">
+          <RefreshCcw size={18}/> {lang === 'id' ? "Ulangi Kuis" : "Retry Quiz"}
+        </button>
+      </div>
+    );
+  }
+
+  const question = QUIZ_DATA[currentQ];
+
+  return (
+    <div className="w-full max-w-2xl">
+       <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-slate-800">{lang === 'id' ? "Kuis" : "Quiz"}</h2>
+          <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg font-bold text-sm">
+            {currentQ + 1} / {QUIZ_DATA.length}
+          </span>
+       </div>
+
+       <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+         <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">
+           {lang === 'id' ? question.question.id : question.question.en}
+         </h3>
+         
+         <div className="space-y-3">
+           {question.options.map((opt, idx) => {
+             // Logic for visual feedback states
+             let btnClass = "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-600";
+             if (selectedOption) {
+               if (selectedOption.index === idx) {
+                 btnClass = selectedOption.isCorrect 
+                    ? "bg-green-100 border-green-500 text-green-700" 
+                    : "bg-red-100 border-red-500 text-red-700";
+               } else if (opt.correct) {
+                 // Show correct answer if wrong one was picked
+                 btnClass = "bg-green-50 border-green-300 text-green-600 opacity-50";
+               } else {
+                 btnClass = "opacity-30 border-slate-100";
+               }
+             }
+
+             return (
+               <button 
+                 key={idx}
+                 onClick={() => !selectedOption && handleAnswer(opt.correct, idx)}
+                 disabled={!!selectedOption}
+                 className={`w-full p-5 rounded-2xl border-2 text-left transition-all duration-300 font-medium flex justify-between items-center ${btnClass}`}
+               >
+                 <span>{lang === 'id' ? opt.id : opt.en}</span>
+                 {selectedOption?.index === idx && (
+                    selectedOption.isCorrect ? <CheckCircle size={20}/> : <span className="font-bold">✕</span>
+                 )}
+               </button>
+             );
+           })}
+         </div>
+       </div>
+    </div>
+  );
+};
+
+const SummarySlide = ({ lang }) => (
+  <div className="w-full max-w-5xl space-y-8">
+    <div className="text-center mb-8">
+      <h2 className="text-3xl font-bold text-slate-800">{lang === 'id' ? "Kesimpulan & Refleksi" : "Conclusion & Reflection"}</h2>
+    </div>
+
+    <div className="grid md:grid-cols-2 gap-6">
+      <div className="bg-blue-50 p-8 rounded-3xl border border-blue-100 hover:shadow-lg transition-shadow">
+          <h3 className="font-bold text-xl text-blue-900 mb-6 flex items-center gap-3">
+            <div className="p-2 bg-blue-200 rounded-lg"><CheckCircle size={20}/></div>
+            {lang === 'id' ? "Poin Kunci" : "Key Points"}
+          </h3>
+          <ul className="space-y-4">
+            {[
+              "Pasar: Pertemuan Permintaan (Pembeli) & Penawaran (Penjual).",
+              "Hukum Permintaan: Harga Naik = Beli Sedikit.",
+              "Hukum Penawaran: Harga Naik = Jual Banyak.",
+              "Equilibrium: Titik temu harga yang disepakati."
+            ].map((txt, i) => (
+              <li key={i} className="bg-white p-4 rounded-2xl shadow-sm text-sm text-slate-700 border border-blue-100 flex gap-3">
+                <span className="font-black text-blue-200">{i+1}</span> {txt}
+              </li>
+            ))}
+          </ul>
+      </div>
+
+      <div className="bg-yellow-50 p-8 rounded-3xl border border-yellow-100 hover:shadow-lg transition-shadow">
+          <h3 className="font-bold text-xl text-yellow-900 mb-6 flex items-center gap-3">
+            <div className="p-2 bg-yellow-200 rounded-lg"><Heart size={20}/></div>
+            {lang === 'id' ? "Refleksi Diri" : "Self Reflection"}
+          </h3>
+          <div className="space-y-4 h-full">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-yellow-400">
+              <p className="text-sm font-bold text-yellow-800 mb-2 uppercase tracking-wide">Smart Consumer</p>
+              <p className="text-slate-600 italic leading-relaxed">"Apakah saya membeli karena butuh, atau karena lapar mata? Bagaimana keputusan saya mempengaruhi pasar?"</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-yellow-400">
+              <p className="text-sm font-bold text-yellow-800 mb-2 uppercase tracking-wide">Ethical Seller</p>
+              <p className="text-slate-600 italic leading-relaxed">"Jika saya penjual, apakah saya akan menaikkan harga seenaknya saat bencana (kelangkaan)?"</p>
+            </div>
+          </div>
+      </div>
+    </div>
+    
+    <div className="text-center pt-8 opacity-60 hover:opacity-100 transition-opacity">
+      <p className="text-slate-500 text-sm">Sampai jumpa di Pertemuan 2: Praktik Pasar Sekolah!</p>
+    </div>
+  </div>
+);
+
+const BasicConceptsSlide = ({ lang }) => (
+  <div className="w-full max-w-5xl">
+    <div className="text-center mb-10">
+      <h2 className="text-3xl font-bold text-slate-800 mb-2">{lang === 'id' ? "Konsep Dasar" : "Basic Concepts"}</h2>
+    </div>
+    <div className="grid md:grid-cols-2 gap-8">
+      <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl hover:-translate-y-1 transition-transform">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="bg-emerald-100 p-3 rounded-2xl text-emerald-600"><Store size={32} /></div>
+          <h3 className="text-2xl font-bold text-slate-800">{lang === 'id' ? "Pasar (Market)" : "Market"}</h3>
+        </div>
+        <p className="text-slate-600 mb-6 leading-relaxed">
+          {lang === 'id' ? "Mekanisme pertemuan penjual & pembeli untuk bertransaksi. Tidak harus tempat fisik." : "Mechanism where sellers & buyers meet to transact. Not necessarily a physical place."}
+        </p>
+        <div className="flex gap-3 flex-wrap">
+          <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-100 font-bold">Pasar Konkret (Nyata)</span>
+          <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-100 font-bold">Pasar Abstrak (Online)</span>
+        </div>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl hover:-translate-y-1 transition-transform">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="bg-blue-100 p-3 rounded-2xl text-blue-600"><TrendingUp size={32} /></div>
+          <h3 className="text-2xl font-bold text-slate-800">{lang === 'id' ? "Hukum Ekonomi" : "Economic Laws"}</h3>
+        </div>
+        <ul className="space-y-4">
+          <li className="flex items-start gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
+            <TrendingDown className="text-red-500 shrink-0 mt-1" size={18}/>
+            <div>
+              <strong className="block text-slate-800">Demand (Permintaan)</strong>
+              Harga Naik <ArrowRight size={12} className="inline mx-1"/> Beli Sedikit.
+            </div>
+          </li>
+          <li className="flex items-start gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
+            <TrendingUp className="text-green-500 shrink-0 mt-1" size={18}/>
+             <div>
+              <strong className="block text-slate-800">Supply (Penawaran)</strong>
+              Harga Naik <ArrowRight size={12} className="inline mx-1"/> Jual Banyak.
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+);
+
+const QuestionsSlide = ({ lang }) => (
+  <div className="w-full max-w-4xl">
+    <div className="text-center mb-10">
+      <h2 className="text-3xl font-bold text-slate-800 mb-2">{lang === 'id' ? "Pertanyaan Pemantik" : "Guiding Questions"}</h2>
+      <p className="text-slate-500">{lang === 'id' ? "Pikirkan jawaban ini selama belajar" : "Think about these while learning"}</p>
+    </div>
+    <div className="grid md:grid-cols-2 gap-8">
+      {[
+        { 
+          icon: HelpCircle, color: "orange", 
+          id: "Mengapa harga barang di pasar bisa berbeda-beda?", 
+          en: "Why can prices of goods in the market vary?" 
+        },
+        { 
+          icon: TrendingUp, color: "blue", 
+          id: "Apa yang terjadi jika harga terlalu tinggi atau terlalu rendah?", 
+          en: "What happens if prices are too high or too low?" 
+        }
+      ].map((item, i) => (
+        <div key={i} className={`bg-${item.color}-50 border border-${item.color}-100 p-8 rounded-3xl relative mt-6`}>
+           <div className={`absolute -top-6 left-1/2 transform -translate-x-1/2 bg-${item.color}-100 p-4 rounded-full border-4 border-white shadow-sm`}>
+             <item.icon size={32} className={`text-${item.color}-600`}/>
+           </div>
+           <p className="mt-6 text-xl font-serif font-medium text-center text-slate-800 italic leading-relaxed">
+             "{lang === 'id' ? item.id : item.en}"
+           </p>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+
+// --- MAIN APP COMPONENT ---
+
+export default function MarketEconomicsModule() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [lang, setLang] = useState('id'); 
+
+  // --- NAVIGATION ---
+  const nextSlide = () => {
+    if (currentSlide < TOTAL_SLIDES - 1) setCurrentSlide(curr => curr + 1);
+  };
+
+  const prevSlide = () => {
+    if (currentSlide > 0) setCurrentSlide(curr => curr - 1);
+  };
+
+  // --- RENDER SLIDE CONTENT ---
+  const renderSlide = () => {
+    switch (currentSlide) {
+      case 0: return <HeroSlide lang={lang} nextSlide={nextSlide} />;
+      case 1: return <ObjectivesSlide lang={lang} />;
+      case 2: return <PreActivitySlide lang={lang} />;
+      case 3: return <QuestionsSlide lang={lang} />;
+      case 4: return <BasicConceptsSlide lang={lang} />;
+      case 5: return <SimulationSlide lang={lang} />;
+      case 6: return <GraphSlide lang={lang} />;
+      case 7: return <QuizSlide lang={lang} />;
+      case 8: return <SummarySlide lang={lang} />;
+      default: return <div>Slide Not Found</div>;
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-800">
+      <Header lang={lang} setLang={setLang} />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden min-h-[700px] flex flex-col relative border border-slate-100 ring-4 ring-slate-100/50">
+          <SlideContainer>
+            {renderSlide()}
+          </SlideContainer>
+          <ControlBar 
+            currentSlide={currentSlide} 
+            totalSlides={TOTAL_SLIDES} 
+            nextSlide={nextSlide} 
+            prevSlide={prevSlide}
+            lang={lang} 
+          />
+        </div>
+      </div>
+      
+      <div className="p-4 text-center text-slate-400 text-xs font-medium tracking-wide">
+        © 2026 SMP YPS Singkole | Cambridge Curriculum
+      </div>
+    </div>
+  );
+}
